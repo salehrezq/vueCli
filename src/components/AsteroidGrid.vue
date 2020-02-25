@@ -27,7 +27,7 @@
                     <td>{{getCloseApproachDate(a)}}</td> 
                     <td> 
                         <ul v-if="a.close_approach_data.length > 0"> 
-                            <li v-for="(value, key) in a.close_approach_data[0].miss_distance"> 
+                            <li :key="value" v-for="(value, key) in a.close_approach_data[0].miss_distance">
                                 {{key}}: {{value}} 
                             </li> 
                         </ul> 
@@ -41,10 +41,71 @@
 
 <script>
     export default {
-
+        props: ['asteroids', 'header'],
+        data: function() {
+            return {
+                showSummary: true
+            }
+        },
+        computed: {
+            numAsteroids: function() {
+                return this.asteroids.length;
+            },
+            closestObject: function() {
+                var neosHavingData = this.asteroids.filter(function(neo) {
+                    return neo.close_approach_data.length > 0;
+                });
+                var simpleNeos = neosHavingData.map(function(neo) {
+                    return {name: neo.name, miles: neo.close_approach_data[0].miss_distance.miles};
+                });
+                var sortedNeos = simpleNeos.sort(function(a, b) {
+                    return a.miles - b.miles;
+                });
+                return sortedNeos[0].name;
+            }
+        },
+        methods: {
+            getCloseApproachDate: function (a) {
+                if (a.close_approach_data.length > 0) {
+                    return a.close_approach_data[0].close_approach_date;
+                }
+                return 'N/A';
+            },
+            remove: function (index) {
+                this.$emit('remove', index);
+            },
+            getRowStyle: function (a) {
+                if (a.close_approach_data.length == 0) {
+                    return {
+                        border: 'solid 2px red',
+                        color: 'red'
+                    }
+                }
+            },
+            isMissingData: function (a) {
+                return a.close_approach_data.length == 0;
+            }
+        },
     }
 </script>
 
-<style>
-
+<style scoped>
+    .highlight {
+        border: solid 3px red;
+        color: red;
+    }
+    .shooting-star-leave-to, .shooting-star-enter {
+        transform: translateX(150px) rotate(30deg);
+        opacity: 0;
+    }
+    .shooting-star-enter-active, .shooting-star-leave-active {
+        transition: all .5s ease;
+    }
+    .neo-list-leave-to, .neo-list-enter {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    .neo-list-enter-active, .neo-list-leave-active {
+        transition: all 1s linear;
+    }
 </style>
